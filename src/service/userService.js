@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import mysql from "mysql2/promise";
 import bluebird from "bluebird";
+import db from '../models/index';
 
 let connection;
 
@@ -30,10 +31,11 @@ const createNewUser = async (email, password, username) => {
   let hashPass = hashPassword(password);
 
   try {
-    const [rows, fields] = await connection.execute(
-      "INSERT INTO user (email, password, username) VALUES (?, ?, ?)",
-      [email, hashPass, username]
-    );
+    await db.User.create({
+      username: username,
+      email: email,
+      password: hashPass
+    })
   } catch (err) {
     console.log(">>> check error: ", err);
   }
