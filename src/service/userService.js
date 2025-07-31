@@ -1,18 +1,18 @@
 import bcrypt from "bcryptjs";
 import mysql from "mysql2/promise";
 import bluebird from "bluebird";
-import db from '../models/index';
+import db from "../models/index";
 
 let connection;
 
-const initConnection = async() => {
-    connection = await mysql.createConnection({
+const initConnection = async () => {
+  connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
     database: "jwt",
     Promise: bluebird,
   });
-}
+};
 
 const start = async () => {
   await initConnection();
@@ -34,66 +34,83 @@ const createNewUser = async (email, password, username) => {
     await db.User.create({
       username: username,
       email: email,
-      password: hashPass
-    })
+      password: hashPass,
+    });
   } catch (err) {
     console.log(">>> check error: ", err);
   }
 };
 
 const getUserList = async () => {
-  try {
-    const [rows, fields] = await connection.execute("SELECT * FROM user");
+  let users = [];
+  users = await db.User.findAll();
+  return users;
+  // try {
+  //   const [rows, fields] = await connection.execute("SELECT * FROM user");
 
-    return rows;
-  } catch (err) {
-    console.log(">>>check error:", err);
-  }
+  //   return rows;
+  // } catch (err) {
+  //   console.log(">>>check error:", err);
+  // }
 };
 
-const deleteUser = async (id) => {
-  try {
-    const [rows, fields] = await connection.execute(
-      "DELETE FROM user WHERE id=?",
-      [id]
-    );
+const deleteUser = async (userId) => {
+  await db.User.destroy({
+    where: {
+      id: userId,
+    },
+  });
+  // try {
+  //   const [rows, fields] = await connection.execute(
+  //     "DELETE FROM user WHERE id=?",
+  //     [id]
+  //   );
 
-    return rows;
-  } catch (err) {
-    console.log(">>>check error:", err);
-  }
+  //   return rows;
+  // } catch (err) {
+  //   console.log(">>>check error:", err);
+  // }
 };
 
-const getUserById = async(id) => {
-  try {
-    const [rows, fields] = await connection.execute(
-      "SELECT * FROM user WHERE id=?",
-      [id]
-    );
+const getUserById = async (id) => {
+  let user = {};
+  user = await db.User.findOne({
+    where: { id: id },
+  });
+  return user.get({ plain: true });
+  // try {
+  //   const [rows, fields] = await connection.execute(
+  //     "SELECT * FROM user WHERE id=?",
+  //     [id]
+  //   );
 
-    return rows;
-  } catch (err) {
-    console.log(">>>check error:", err);
-  }
-}
+  //   return rows;
+  // } catch (err) {
+  //   console.log(">>>check error:", err);
+  // }
+};
 
-const updateUserInfor = async(email, username, id) => {
-    try {
-    const [rows, fields] = await connection.execute(
-      "UPDATE user SET email=?, username=? WHERE id=? ",
-      [email, username, id]
-    );
+const updateUserInfor = async (email, username, id) => {
+  await db.User.update(
+    { email: email, username: username },
+    { where: { id: id } }
+  );
+  //   try {
+  //   const [rows, fields] = await connection.execute(
+  //     "UPDATE user SET email=?, username=? WHERE id=? ",
+  //     [email, username, id]
+  //   );
 
-    return rows;
-  } catch (err) {
-    console.log(">>>check error:", err);
-  }
-}
+  //   return rows;
+  // } catch (err) {
+  //   console.log(">>>check error:", err);
+  // }
+};
 
 module.exports = {
   createNewUser,
   getUserList,
   deleteUser,
   getUserById,
-  updateUserInfor
+  updateUserInfor,
 };
