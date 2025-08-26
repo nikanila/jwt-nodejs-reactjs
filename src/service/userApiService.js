@@ -1,5 +1,9 @@
 import db from "../models/index";
-import {checkEmailExist, checkPhoneExist, hashUserPassword} from "./loginRegisterService";
+import {
+  checkEmailExist,
+  checkPhoneExist,
+  hashUserPassword,
+} from "./loginRegisterService";
 
 const getAllUser = async () => {
   try {
@@ -38,7 +42,7 @@ const getUserWithPagination = async (page, limit) => {
       limit: limit,
       attributes: ["id", "username", "email", "phone", "sex", "address"],
       include: { model: db.Group, attributes: ["name", "description", "id"] },
-      order: [['id', 'DESC']]
+      order: [["id", "DESC"]],
     });
 
     let totalPages = Math.ceil(count / limit);
@@ -71,7 +75,7 @@ const createNewUser = async (data) => {
       return {
         EM: "The email is already exist",
         EC: 1,
-        DT: "email"
+        DT: "email",
       };
     }
     let isPhoneExist = await checkPhoneExist(data.phone);
@@ -79,13 +83,13 @@ const createNewUser = async (data) => {
       return {
         EM: "The phone number is already exist",
         EC: 1,
-        DT: "phone"
+        DT: "phone",
       };
     }
     //hash user password
     let hashPassword = hashUserPassword(data.password);
 
-    await db.User.create({...data, password: hashPassword});
+    await db.User.create({ ...data, password: hashPassword });
     return {
       EM: "create ok",
       EC: 0,
@@ -98,16 +102,42 @@ const createNewUser = async (data) => {
 
 const updateUser = async (data) => {
   try {
-    let user = db.User.findOne({
+    if (!data.groupId) {
+      return {
+        EM: "error with empty groupId",
+        EC: 1,
+        DT: "group",
+      };
+    }
+    let user = await db.User.findOne({
       where: { id: data.id },
     });
     if (user) {
-      user.save({});
+      await user.update({
+        username: data.username,
+        address: data.address,
+        sex: data.sex,
+        groupId: data.groupId,
+      });
+      return {
+        EM: "Update user succeed",
+        EC: 0,
+        DT: "",
+      };
     } else {
-      //not found
+      return {
+        EM: "User not found",
+        EC: 2,
+        DT: "",
+      };
     }
   } catch (error) {
     console.log(error);
+    return {
+      EM: "something wrongs with services",
+      EC: 1,
+      DT: [],
+    };
   }
 };
 
