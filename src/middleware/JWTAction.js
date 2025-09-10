@@ -2,14 +2,13 @@ require("dotenv").config();
 
 import jwt from "jsonwebtoken";
 
-const nonSecurePaths = ['/', '/login', '/register'];
-  
+const nonSecurePaths = ["/", "/login", "/register"];
 
 const createJWT = (payload) => {
   let key = process.env.JWT_SECRET;
   let token = null;
   try {
-    token = jwt.sign(payload, key);
+    token = jwt.sign(payload, key, { expiresIn: process.env.JWT_EXPIRES_IN });
   } catch (error) {
     console.log(token);
   }
@@ -56,7 +55,8 @@ const checkUserJWT = (req, res, next) => {
 };
 
 const checkUserPermission = (req, res, next) => {
-  if (nonSecurePaths.includes(req.path) || req.path === "/account") return next();
+  if (nonSecurePaths.includes(req.path) || req.path === "/account")
+    return next();
 
   if (req.user) {
     let email = req.user.email;
@@ -93,5 +93,5 @@ module.exports = {
   createJWT,
   verifyToken,
   checkUserJWT,
-  checkUserPermission
+  checkUserPermission,
 };
