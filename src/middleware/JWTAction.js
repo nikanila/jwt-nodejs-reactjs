@@ -2,14 +2,13 @@ require("dotenv").config();
 
 import jwt from "jsonwebtoken";
 
-const nonSecurePaths = ['/', '/login', '/register'];
-  
+const nonSecurePaths = ["/", "/logout", "/login", "/register"];
 
 const createJWT = (payload) => {
   let key = process.env.JWT_SECRET;
   let token = null;
   try {
-    token = jwt.sign(payload, key, {expiresIn: process.env.JWT_EXPIRES_IN});
+    token = jwt.sign(payload, key, { expiresIn: process.env.JWT_EXPIRES_IN });
   } catch (error) {
     console.log(token);
   }
@@ -27,15 +26,29 @@ const verifyToken = (token) => {
   return decoded;
 };
 
+const extractToken = (req, res) => {
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.split(" ")[0] === "Bearer"
+  ) {
+    return req.headers.authorization.split(" ")[1];
+  }
+  return null;
+};
+
 const checkUserJWT = (req, res, next) => {
   if (nonSecurePaths.includes(req.path)) return next();
 
   let cookies = req.cookies;
-  if (cookies && cookies.jwt) {
-    let token = cookies.jwt;
+  let tokenFromHeader = extractToken(req);
+
+  if ((cookies && cookies.jwt) || tokenFromHeader) {
+    let token = cookies && cookies.jwt ? cookies.jwt : tokenFromHeader;
+    console.log("cookies: ", cookies);
     let decoded = verifyToken(token);
     if (decoded) {
       req.user = decoded;
+      req.token = token;
       next();
     } else {
       return res.status(401).json({
@@ -44,7 +57,6 @@ const checkUserJWT = (req, res, next) => {
         EM: "Not authenticated the user",
       });
     }
-    console.log("my jwt: ", cookies.jwt);
   } else {
     return res.status(401).json({
       EC: -1,
@@ -55,7 +67,8 @@ const checkUserJWT = (req, res, next) => {
 };
 
 const checkUserPermission = (req, res, next) => {
-  if (nonSecurePaths.includes(req.path)) return next();
+  if (nonSecurePaths.includes(req.path) || req.path === "/account")
+    return next();
 
   if (req.user) {
     let email = req.user.email;
@@ -92,5 +105,5 @@ module.exports = {
   createJWT,
   verifyToken,
   checkUserJWT,
-  checkUserPermission
+  checkUserPermission,
 };
