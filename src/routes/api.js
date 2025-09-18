@@ -3,27 +3,9 @@ import apiController from "../controller/apiController";
 import userController from "../controller/userController";
 import groupController from "../controller/groupController";
 import { checkUserJWT, checkUserPermission } from "../middleware/JWTAction";
+import roleController from "../controller/roleController";
 
 const router = express.Router();
-
-const testMiddleware = (req, res, next) => {
-  console.log("calling a middleware");
-  if (true) {
-    return res.send("reject a middleware");
-  }
-  next();
-};
-
-// const checkUserLogin = (req, res, next) => {
-//   const nonSecurePaths = ["/", "/register", "/login"];
-//   if (nonSecurePaths.includes(req.path)) return next();
-
-//   //authenticate user
-//   if (user) {
-//     next();
-//   } else {
-//   }
-// };
 
 const initApiRoutes = (app) => {
   // router.get("/test-api", apiController.testApi);
@@ -35,11 +17,19 @@ const initApiRoutes = (app) => {
   router.post("/logout", apiController.handleLogout);
   router.get("/account", userController.getUserAccount);
 
+  //user routes
   router.get("/user/read", userController.readFunc);
   router.post("/user/create", userController.createFunc);
   router.put("/user/update", userController.updateFunc);
   router.delete("/user/delete", userController.deleteFunc);
 
+  //role routes
+  router.get("/role/read", roleController.readFunc);
+  router.post("/role/create", roleController.createFunc);
+  router.put("/role/update", roleController.updateFunc);
+  router.delete("/role/delete", roleController.deleteFunc);
+
+  //group routes
   router.get("/group/read", groupController.readFunc);
   return app.use("/api/v1/", router);
 };
